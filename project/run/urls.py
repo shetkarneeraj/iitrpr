@@ -6,6 +6,7 @@ from home.articles import *
 from home.program import *
 from home.programGroupMap import *
 from home.views import *
+from home.groups import *
 from home.auth import UserRegistrationView, UserLoginView
 
 urlpatterns = [
@@ -17,6 +18,7 @@ urlpatterns = [
 
     path('programs/', programsRoute),
     path('programgroups/', programGroupMap),
+    path('groups/', groupsRoute),
 
     path('register/', UserRegistrationView.as_view(), name='register'),
     path('login/', UserLoginView.as_view(), name='login'),

@@ -29,7 +29,7 @@ ALLOWED_HOSTS = []
 
 
 # Application definition
-SITE_ID = 2
+SITE_ID = 1
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -50,10 +50,10 @@ INSTALLED_APPS = [
 
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
-        "SCOPE": {
+        "SCOPE": [
             "profile",
             "email",
-        },
+        ],
         "AUTH_PARAMS": {
             "access_type": "online",
         }
@@ -63,6 +63,8 @@ SOCIALACCOUNT_PROVIDERS = {
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     ],
 }
 

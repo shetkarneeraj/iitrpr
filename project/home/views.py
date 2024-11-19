@@ -1,9 +1,8 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from home.serializers import PersonSerializer
 from django.shortcuts import render, redirect
-from .models import Person
 from datetime import datetime
+from rest_framework.authtoken.models import Token
 
 
 # Create your views here.
