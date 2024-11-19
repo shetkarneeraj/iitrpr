@@ -1,6 +1,7 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from home.serializers import PersonSerializer
+from django.shortcuts import render, redirect
 from .models import Person
 from datetime import datetime
 
@@ -10,11 +11,7 @@ from datetime import datetime
 def index(request):
 
     if request.method == 'GET':
-        args = request.GET.get("search") # Keyword arguments
-        courses = {
-            'courses': ['Python', 'Django', 'JavaScript', 'React', 'Data Science', args]
-        }
-        return Response(courses)
+        return render(request, 'home.html')
     
     if request.method == 'POST':
         course = request.data.get('course') # Data in the json request body
@@ -39,3 +36,7 @@ def People(request):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors)
+    
+@api_view(['GET', 'POST'])
+def logout_view(request):
+    return Response({'message': 'Logged out successfully.'})

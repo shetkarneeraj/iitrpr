@@ -1,11 +1,29 @@
 from rest_framework import serializers
+from django.contrib.auth.models import User
+
 from .models import (
-    Person, Institution, User, Course, Chapter, Video, Segment, Article, Question, Quiz, Performance, 
+    Person, Institution, Course, Chapter, Video, Segment, Article, Question, Quiz, Performance, 
     StudySession, Violation, Log, Topic, TopicAssociation, StudentCourseAssociation, SegmentReplay, 
     ChapterCompletion, CourseCompletion, AssessmentAttempt, QuestionGroup, Group, Program, 
     ProgramGroupMapping, AssessmentGroup, AssessmentGroupMapping, StudyMaterial, StudyMaterialSection, 
     StudyMaterialSectionMapping, Feedback, Rating, CourseHistory, QuestionMediaMapping, QuestionGroupMediaMapping
 )
+
+class UserRegistrationSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password']
+
+    def create(self, validated_data):
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            password=validated_data['password']
+        )
+        return user
+
 
 class PersonSerializer(serializers.ModelSerializer):
     class Meta:

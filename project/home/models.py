@@ -24,7 +24,7 @@ class Institution(models.Model):
     def __str__(self):
         return self.name
 
-class User(models.Model):
+class Profile(models.Model):
     name = models.CharField(max_length=255)
     username = models.CharField(max_length=255, unique=True)
     password = models.CharField(max_length=255)
@@ -52,7 +52,7 @@ class Chapter(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
-    created_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+    created_by = models.ForeignKey(Profile, null=True, blank=True, on_delete=models.SET_NULL)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -60,7 +60,7 @@ class Chapter(models.Model):
 
 class Video(models.Model):
     chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE)
-    prof = models.ForeignKey(User, on_delete=models.CASCADE)
+    prof = models.ForeignKey(Profile, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
     transcript = models.TextField(null=True, blank=True)
@@ -82,7 +82,7 @@ class Segment(models.Model):
 
 class Article(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
-    prof = models.ForeignKey(User, on_delete=models.CASCADE)
+    prof = models.ForeignKey(Profile, on_delete=models.CASCADE)
     title = models.CharField(max_length=255, unique=True)
     subtitle = models.CharField(max_length=255, null=True, blank=True)
     description = models.TextField()
@@ -123,7 +123,7 @@ class Quiz(models.Model):
         return self.title
 
 class Performance(models.Model):
-    student = models.ForeignKey(User, on_delete=models.CASCADE)
+    student = models.ForeignKey(Profile, on_delete=models.CASCADE)
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     correct = models.BooleanField()
@@ -133,7 +133,7 @@ class Performance(models.Model):
         return f"{self.student.username} - {self.question.question}"
 
 class StudySession(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(Profile, on_delete=models.CASCADE)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     duration = models.IntegerField()
     violations = models.IntegerField()
@@ -154,7 +154,7 @@ class Violation(models.Model):
 
 class Log(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_by = models.ForeignKey(Profile, on_delete=models.CASCADE)
     description = models.TextField()
 
     def __str__(self):
@@ -174,7 +174,7 @@ class TopicAssociation(models.Model):
         return f"{self.topic.name} - {self.course.name}"
 
 class StudentCourseAssociation(models.Model):
-    student = models.ForeignKey(User, on_delete=models.CASCADE)
+    student = models.ForeignKey(Profile, on_delete=models.CASCADE)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     enrollment_date = models.DateTimeField(auto_now_add=True)
     completion_date = models.DateTimeField(null=True, blank=True)
@@ -185,7 +185,7 @@ class StudentCourseAssociation(models.Model):
         return f"{self.student.username} - {self.course.name}"
 
 class SegmentReplay(models.Model):
-    student = models.ForeignKey(User, on_delete=models.CASCADE)
+    student = models.ForeignKey(Profile, on_delete=models.CASCADE)
     segment = models.ForeignKey(Segment, on_delete=models.CASCADE)
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     replay_count = models.IntegerField(default=0)
@@ -195,7 +195,7 @@ class SegmentReplay(models.Model):
         return f"{self.student.username} - {self.segment.video.title}"
 
 class ChapterCompletion(models.Model):
-    student = models.ForeignKey(User, on_delete=models.CASCADE)
+    student = models.ForeignKey(Profile, on_delete=models.CASCADE)
     chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE)
     completion_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
     last_updated = models.DateTimeField(auto_now=True)
@@ -204,7 +204,7 @@ class ChapterCompletion(models.Model):
         return f"{self.student.username} - {self.chapter.title}"
 
 class CourseCompletion(models.Model):
-    student = models.ForeignKey(User, on_delete=models.CASCADE)
+    student = models.ForeignKey(Profile, on_delete=models.CASCADE)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     completion_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
     last_updated = models.DateTimeField(auto_now=True)
@@ -213,7 +213,7 @@ class CourseCompletion(models.Model):
         return f"{self.student.username} - {self.course.name}"
 
 class AssessmentAttempt(models.Model):
-    student = models.ForeignKey(User, on_delete=models.CASCADE)
+    student = models.ForeignKey(Profile, on_delete=models.CASCADE)
     assessment = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     attempt_number = models.IntegerField()
     attempt_date = models.DateTimeField(auto_now_add=True)
@@ -303,7 +303,7 @@ class StudyMaterialSectionMapping(models.Model):
 class Feedback(models.Model):
     content_type = models.CharField(max_length=50)
     content_id = models.IntegerField()
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(Profile, on_delete=models.CASCADE)
     feedback_type = models.CharField(max_length=50)
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -314,7 +314,7 @@ class Feedback(models.Model):
 class Rating(models.Model):
     content_type = models.CharField(max_length=50)
     content_id = models.IntegerField()
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(Profile, on_delete=models.CASCADE)
     rating = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
 
