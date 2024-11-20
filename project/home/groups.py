@@ -9,7 +9,8 @@ from home.auth import check_auth
 @api_view(['GET', 'POST', 'DELETE', 'PUT'])
 def groupsRoute(request):
     if request.method == 'GET':
-        if check_auth(request, ['Admin', 'User']):
+        user_data, auth_status = check_auth(request, ['Admin', 'User'])
+        if not user_data.is_anonymous:
             args = request.GET.get("search")
             if args:
                 groups = Group.objects.filter(name__icontains=args)

@@ -7,7 +7,8 @@ from .serializers import UserRegistrationSerializer, profileSerializer
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 from django.contrib.auth.models import AnonymousUser
-from home.models import Profile
+from home.models import Profile, loginTokens
+import datetime
 
 def check_auth(request, reqRole):
     jwt_authenticator = JWTAuthentication()
@@ -15,7 +16,7 @@ def check_auth(request, reqRole):
         validated_token = jwt_authenticator.get_validated_token(request.headers.get('x-access-token'))
         user = jwt_authenticator.get_user(validated_token)
         role = Profile.objects.get(user=user).role
-        return user.username, role in reqRole
+        return user, role in reqRole
     except AuthenticationFailed:
         return AnonymousUser(), 'Unauthorized'
 
@@ -29,7 +30,7 @@ class UserRegistrationView(APIView):
 
         userregistrationserializer = UserRegistrationSerializer(data=request.data)
         userprofileSerializer = profileSerializer(data=request.data)
-        
+
         if userregistrationserializer.is_valid() and userprofileSerializer.is_valid():
             try:
                 userregistrationserializer.save()
@@ -58,7 +59,10 @@ class UserLoginView(APIView):
         if user:
             # Generate refresh and access tokens using SimpleJWT
             refresh = RefreshToken.for_user(user)
-
+            # loginTokens.objects.create(token=refresh.access_token, created_at=datetime.datetime.now(),
+            #                                                 expiry=refresh.expires,
+            #                                                 user_id=user.id)
+            
             return Response({
                 "refresh": str(refresh),
                 "access": str(refresh.access_token),

@@ -20,22 +20,5 @@ def index(request):
         return Response(courses)
     
 @api_view(['GET', 'POST'])
-def People(request):
-
-    if request.method == 'GET':
-        args = request.GET.get("search")
-        # Get data from Person using keyword search
-        people = Person.objects.filter(name__icontains=args)
-        serializer = PersonSerializer(people, many=True)
-        return Response(serializer.data)
-    
-    if request.method == 'POST':
-        serializer = PersonSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors)
-    
-@api_view(['GET', 'POST'])
 def logout_view(request):
     return Response({'message': 'Logged out successfully.'})

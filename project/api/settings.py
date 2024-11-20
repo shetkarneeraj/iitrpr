@@ -25,7 +25,10 @@ SECRET_KEY = 'django-insecure-j@=$4lf2=1qilhhvw0-e6--fyjybog72#nq6_q*oq^8$bjc0ei
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["localhost:5173", "192.168.184.183"]
+
+CORS_ORIGIN_ALLOW_ALL = True
+
 
 
 # Application definition
@@ -46,6 +49,7 @@ INSTALLED_APPS = [
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
     "oauth2_provider",
+    'corsheaders',
 ]
 
 SOCIALACCOUNT_PROVIDERS = {
@@ -76,7 +80,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'allauth.account.middleware.AccountMiddleware'
+    'allauth.account.middleware.AccountMiddleware',
+    'corsheaders.middleware.CorsMiddleware'
 ]
 
 ROOT_URLCONF = 'api.urls'

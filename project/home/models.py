@@ -334,3 +334,13 @@ class QuestionGroupMediaMapping(models.Model):
     def __str__(self):
         return f"{self.question_group.question.question} - {self.article.title if self.article else self.segment.video.title}"
 
+class loginTokens(models.Model):
+    user = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    token = models.CharField(max_length=255)
+    refresh_token = models.CharField(max_length=255)
+    expiry = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.token[:5]}"
+    

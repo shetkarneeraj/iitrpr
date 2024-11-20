@@ -11,7 +11,6 @@ from home.auth import UserRegistrationView, UserLoginView
 
 urlpatterns = [
     path('index/', index),
-    path('person/', People),
     path('institutes/', institutes),
     path('questions/', questions),
     path('articles/', articles),

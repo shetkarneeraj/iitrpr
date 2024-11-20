@@ -234,3 +234,9 @@ class profileSerializer(serializers.ModelSerializer):
         model = User
         fields = '__all__'
         depth = 1
+
+class loginTokenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'
+        depth = 1
