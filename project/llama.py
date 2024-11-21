@@ -19,7 +19,7 @@ def generate_questions_from_transcript(filename, model='llama3.2'):
         transcript = file.read()
     
     # Combine task description and transcript into the prompt
-    prompt = f"Transcript: {transcript} \n \n "
+    prompt = f"Transcript: {transcript} \n \n {task_description}"
 
     # Call Ollama's chat API to generate a response
     response = ollama.generate(model=model, prompt=prompt)

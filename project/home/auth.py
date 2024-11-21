@@ -45,33 +45,46 @@ class UserRegistrationView(APIView):
 
 # User Login
 class UserLoginView(APIView):
+    """
+    Handles user login and returns JWT tokens along with user role and client IP.
+    """
+
     def post(self, request):
+        # Extract username and password from request data
         username = request.data.get('username')
         password = request.data.get('password')
 
-        # Get the user's IP address
+        # Get the client's IP address
         ip_address = self.get_client_ip(request)
-        print(f"Login attempt from IP: {ip_address}")  # Log the IP address
+        print(f"Login attempt from IP: {ip_address}")  # Log the IP address for debugging
 
         # Authenticate the user
         user = authenticate(username=username, password=password)
-        profile = Profile.objects.get(username=username)
 
         if user:
+            try:
+                # Fetch user profile for additional information
+                profile = Profile.objects.get(user=user)
+            except Profile.DoesNotExist:
+                return Response({"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)
+
+            # Generate JWT tokens
             refresh = RefreshToken.for_user(user)
-            
+
             return Response({
                 "refresh": str(refresh),
                 "access": str(refresh.access_token),
                 "message": f"Login successful from IP: {ip_address}",
-                "role": profile.user_type
+                "role": profile.user_type,  # Replace with your Profile field for user role
             }, status=status.HTTP_200_OK)
 
         return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
     @staticmethod
     def get_client_ip(request):
-        """Fetch the client IP address from the request."""
+        """
+        Fetch the client IP address from the request headers or META data.
+        """
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
         if x_forwarded_for:
             ip = x_forwarded_for.split(',')[0]
