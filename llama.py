@@ -5,10 +5,13 @@ import pandas as pd
 
 def generate_questions_from_transcript(filename, model='llama3.2'):
     task_description = """
-    Given the following transcript, generate questions that can be used to quiz someone on the content.
+    Task Description:
+    Based on the above transcript, generate questions that can be used to quiz someone on the content.
     The generated questions should be relevant to the course material and should be easily answerable based on the transcript.
-    Return question, list of four options and a correct answer index in a json format. Strictly follow json format provided.
-    {question:"question", options:['option1', 'option2', 'option3', 'option4'], correct_answer: 'question2'}
+    Return question, list of four options and a correct answer index in a json format. A few examples are given below. Strictly follow json format below.
+    {question:'Who won the nobel prize for physics in 2000?', options:['Jack Kilby', 'Albert Einstein', 'Michio Kaku', 'Isaac Newton'], correct_answer: 'Jack Kilby'}
+    {question:'Dusra_prashn', options:['Pehlaopshan', 'Dusraoption', 'Theesraopshan', 'Chouthaopshan'], correct_answer: 'Theesraopshan'}
+    {question:'What colour is the umbrealla?', options:['Red', 'Blue', 'Green', 'Yellow'], correct_answer: 'Blue'}
     """
 
     # Read the transcript from the file
@@ -16,7 +19,7 @@ def generate_questions_from_transcript(filename, model='llama3.2'):
         transcript = file.read()
     
     # Combine task description and transcript into the prompt
-    prompt = f"{task_description} \n {transcript}"
+    prompt = f"Transcript: {transcript} \n \n "
 
     # Call Ollama's chat API to generate a response
     response = ollama.generate(model=model, prompt=prompt)

@@ -12,15 +12,12 @@ class Institution(models.Model):
 class Profile(models.Model):
     name = models.CharField(max_length=255)
     username = models.CharField(max_length=255, unique=True)
-    password = models.CharField(max_length=255)
     email = models.EmailField(unique=True)
     login = models.BooleanField(default=False)
     user_type = models.CharField(max_length=255)
     is_active = models.BooleanField(default=True)
-    role = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
     institution = models.ForeignKey(Institution, on_delete=models.CASCADE)
-    login_status = models.BooleanField(default=False)
     last_ip = models.CharField(max_length=50, blank=True, null=True)
 
     def __str__(self):

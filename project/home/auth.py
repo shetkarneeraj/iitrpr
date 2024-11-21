@@ -55,18 +55,16 @@ class UserLoginView(APIView):
 
         # Authenticate the user
         user = authenticate(username=username, password=password)
+        profile = Profile.objects.get(username=username)
 
         if user:
-            # Generate refresh and access tokens using SimpleJWT
             refresh = RefreshToken.for_user(user)
-            # loginTokens.objects.create(token=refresh.access_token, created_at=datetime.datetime.now(),
-            #                                                 expiry=refresh.expires,
-            #                                                 user_id=user.id)
             
             return Response({
                 "refresh": str(refresh),
                 "access": str(refresh.access_token),
-                "message": f"Login successful from IP: {ip_address}"
+                "message": f"Login successful from IP: {ip_address}",
+                "role": profile.user_type
             }, status=status.HTTP_200_OK)
 
         return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
