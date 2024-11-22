@@ -28,7 +28,7 @@ def generate_questions_from_transcript(filename, model='llama3.2'):
         transcript = file.read()
     
     # Combine task description and transcript into the prompt
-    prompt = task_description +'\n Here is the transcript content: \n' + transcript + 'Generate 1 question in the said json format, { "question": "<question_text>", "options": ["<option1>", "<option2>", "<option3>", "<option4>"], "correct_answer": <index_of_correct_option> } , based on this transcript.'
+    prompt = task_description +'\n Here is the transcript content: \n' + transcript + 'Generate 5 questions in the said json format, { "question": "<question_text>", "options": ["<option1>", "<option2>", "<option3>", "<option4>"], "correct_answer": <index_of_correct_option> } , based on this transcript.'
 
     # Call Ollama's chat API to generate a response
     response = ollama.generate(model=model, prompt=prompt)

@@ -16,7 +16,7 @@ from rest_framework_simplejwt.views import (
 )
 
 urlpatterns = [
-    path('institutes/', institutes),
+    path('institutes/', InstitutesView.as_view()),
     path('questions/', questions),
     path('articles/', articles),
 
