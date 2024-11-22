@@ -22,6 +22,7 @@ def courses(request):
 
     # POST request: Create a new course
     elif request.method == 'POST':
+        
         # Check if a similar course already exists
         existing_course = Course.objects.filter(name__icontains=request.data.get('name'))
         if existing_course:

@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 
 from .models import (
-    Institution, Course, Chapter, Video, Segment, Article, Question, Quiz, Performance, 
+    Institution, Profile, Course, CourseInstructorAssociation, Chapter, Video, Segment, Article, Question, Quiz, Performance, 
     StudySession, Violation, Log, Topic, TopicAssociation, StudentCourseAssociation, SegmentReplay, 
     ChapterCompletion, CourseCompletion, AssessmentAttempt, QuestionGroup, Group, Program, 
     ProgramGroupMapping, AssessmentGroup, AssessmentGroupMapping, StudyMaterial, StudyMaterialSection, 
@@ -14,13 +14,15 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password']
+        fields = ['username', 'email', 'password', 'first_name', 'last_name']
 
     def create(self, validated_data):
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
-            password=validated_data['password']
+            password=validated_data['password'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name'],
         )
         return user
 
@@ -39,6 +41,12 @@ class UserSerializer(serializers.ModelSerializer):
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
+        fields = '__all__'
+        depth = 1
+
+class CourseInstructorAssociationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CourseInstructorAssociation
         fields = '__all__'
         depth = 1
 
@@ -231,7 +239,7 @@ class QuestionGroupMediaMappingSerializer(serializers.ModelSerializer):
 class profileSerializer(serializers.ModelSerializer):
     
     class Meta:
-        model = User
+        model = Profile
         fields = '__all__'
         depth = 1
 

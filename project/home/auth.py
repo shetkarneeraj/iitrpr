@@ -9,6 +9,8 @@ from rest_framework.exceptions import AuthenticationFailed
 from django.contrib.auth.models import AnonymousUser
 from home.models import Profile, loginTokens
 import datetime
+from rest_framework.status import HTTP_401_UNAUTHORIZED
+from rest_framework_simplejwt.tokens import AccessToken
 
 def check_auth(request, reqRole):
     jwt_authenticator = JWTAuthentication()
@@ -25,8 +27,8 @@ def check_auth(request, reqRole):
 class UserRegistrationView(APIView):
     def post(self, request):
 
-        if not request.data.get("role"):
-            request.data.set("role", "User")
+        if not request.data.get("user_type"):
+            request.data["user_type"] = "user"
 
         userregistrationserializer = UserRegistrationSerializer(data=request.data)
         userprofileSerializer = profileSerializer(data=request.data)
@@ -37,14 +39,34 @@ class UserRegistrationView(APIView):
                 userprofileSerializer.save()
                 return Response({"message": "User registered successfully."}, status=status.HTTP_201_CREATED)
             except Exception as e:
-                userregistrationserializer.delete()
-                userprofileSerializer.delete()
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(userregistrationserializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # User Login
 class UserLoginView(APIView):
+    """
+    Handles user login and returns a single JWT access token.
+    """
+
+    def post(self, request):
+        # Extract username and password from request data
+        username = request.data.get('username')
+        password = request.data.get('password')
+
+        # Authenticate the user
+        user = authenticate(username=username, password=password)
+
+        if user:
+            # Generate a JWT access token
+            access_token = str(AccessToken.for_user(user))
+
+            return Response({
+                "access_token": access_token,
+                "expires_in": 5 * 60 * 60,  # Expiration time in seconds (5 hours)
+            }, status=200)
+
+        return Response({"error": "Invalid credentials"}, status=HTTP_401_UNAUTHORIZED)
     """
     Handles user login and returns JWT tokens along with user role and client IP.
     """
@@ -60,21 +82,23 @@ class UserLoginView(APIView):
 
         # Authenticate the user
         user = authenticate(username=username, password=password)
+        print(user)
 
         if user:
             try:
                 # Fetch user profile for additional information
-                profile = Profile.objects.get(user=user)
+                profile = Profile.objects.get(username=user)
             except Profile.DoesNotExist:
                 return Response({"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)
 
             # Generate JWT tokens
             refresh = RefreshToken.for_user(user)
 
+            authorization_header = (f"Bearer {str(refresh.access_token)}")
+            print(authorization_header)
+
             return Response({
-                "refresh": str(refresh),
                 "access": str(refresh.access_token),
-                "message": f"Login successful from IP: {ip_address}",
                 "role": profile.user_type,  # Replace with your Profile field for user role
             }, status=status.HTTP_200_OK)
 

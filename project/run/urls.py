@@ -7,6 +7,7 @@ from home.program import *
 from home.programGroupMap import *
 from home.views import *
 from home.groups import *
+from home.courses import *
 from home.auth import UserRegistrationView, UserLoginView
 
 from rest_framework_simplejwt.views import (
@@ -27,7 +28,7 @@ urlpatterns = [
     path('login/', UserLoginView.as_view(), name='login'),
     path('logout/', logout_view, name='logout'),
 
-    path('courses/', CoursesView.as_view(), name='courses'),
+    path('courses/', courses, name='courses'),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]

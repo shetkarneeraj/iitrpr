@@ -10,14 +10,13 @@ class Institution(models.Model):
         return self.name
 
 class Profile(models.Model):
-    name = models.CharField(max_length=255)
     username = models.CharField(max_length=255, unique=True)
     email = models.EmailField(unique=True)
     login = models.BooleanField(default=False)
     user_type = models.CharField(max_length=255)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    institution = models.ForeignKey(Institution, on_delete=models.CASCADE)
+    institution = models.ForeignKey(Institution, on_delete=models.CASCADE, null=True, blank=True)
     last_ip = models.CharField(max_length=50, blank=True, null=True)
 
     def __str__(self):
@@ -32,6 +31,14 @@ class Course(models.Model):
 
     def __str__(self):
         return self.name
+
+class CourseInstructorAssociation(models.Model):
+    instructor = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    role = models.CharField(max_length=255) #professor, teaching assisstant etc
+
+    def __str__(self):
+        return f"{self.course.name} - {self.instructor.name}"
 
 class Chapter(models.Model):
     title = models.CharField(max_length=255)

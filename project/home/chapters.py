@@ -1,14 +1,18 @@
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from home.serializers import ChapterSerializer
 from .models import Chapter
-from datetime import datetime
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+from rest_framework.response import Response
+from rest_framework import status
 
 @api_view(['GET', 'POST', 'DELETE', 'PUT'])
 def chapters(request):
-
-    # GET request: Fetch chapters based on a search query or return all chapters
+    # GET request: Available for all roles (AllowAny permission)
     if request.method == 'GET':
         args = request.GET.get("search")
         if args:
@@ -20,12 +24,20 @@ def chapters(request):
         serializer = ChapterSerializer(chapters, many=True)
         return Response(serializer.data)
 
+    # Role-based access for other methods
+    user = request.user
+
+    # Define allowed roles
+    allowed_roles = ["admin", "superuser", "professor", "staff"]
+
+    if not user.is_authenticated or not getattr(user, "role", None) in allowed_roles:
+        return Response({'error': 'You do not have permission to perform this action.'}, status=status.HTTP_403_FORBIDDEN)
+
     # POST request: Create a new chapter
-    elif request.method == 'POST':
+    if request.method == 'POST':
         existing_chapter = Chapter.objects.filter(title__icontains=request.data.get('title'))
         if existing_chapter.exists():
             return Response({'error': 'Chapter already exists'}, status=status.HTTP_400_BAD_REQUEST)
-
         serializer = ChapterSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
