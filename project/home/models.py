@@ -6,7 +6,7 @@ class Institution(models.Model):
     description = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     url = models.URLField(null=True, blank=True)
-    status = models.IntegerField(null=True, blank=True)
+    status = models.IntegerField(null=True, blank=True, default=0)
 
     def __str__(self):
         return self.name

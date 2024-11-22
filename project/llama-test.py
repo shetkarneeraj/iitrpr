@@ -2,6 +2,35 @@ import ollama
 import re
 import json
 import pandas as pd
+import openai
+
+function_schema = {
+    "name": "format_questions",
+    "description": "Formats and validates MCQ responses into the desired JSON structure.",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "questions": {
+                "type": "array",
+                "description": "List of questions with options and correct answers",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "question": {"type": "string"},
+                        "options": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "minItems": 1,  # At least one option required
+                        },
+                        "correct_answer": {"type": "integer", "minimum": 0},
+                    },
+                    "required": ["question", "options", "correct_answer"],
+                },
+            },
+        },
+        "required": ["questions"],
+    },
+}
 
 def generate_questions_from_transcript(filename, model='llama3.2'):
     task_description = """
@@ -32,8 +61,36 @@ def generate_questions_from_transcript(filename, model='llama3.2'):
 
     # Call Ollama's chat API to generate a response
     response = ollama.generate(model=model, prompt=prompt)
+    llama_output = response["response"]
+
+    function_call_response = openai.chat.completions.create(
+        model="gpt-4-0613",
+        messages=[
+            {
+                "role": "system",
+                "content": "You are an AI assistant skilled at cleaning and structuring JSON data.",
+            },
+            {
+                "role": "user",
+                "content": f"Validate and format this response into a JSON list: {llama_output}",
+            },
+        ],
+        functions=[function_schema],
+        function_call={"name": "format_questions"},
+    )
+
+    # Extract the structured questions
+    structured_output = function_call_response["choices"][0]["message"]["function_call"]["arguments"]
+    questions = json.loads(structured_output)
+    print("Formatted Questions:", questions)
+    # Save questions to a CSV file
+    with open("output.csv", "a") as output:
+        for question in questions["questions"]:
+            output.write(f"{question['question']},{','.join(question['options'])},{question['correct_answer']}\n")
+    return questions["questions"]
+
     # Extract JSON from the response using regex
-    json_match = re.search(r'\[\s*{.*}\s*\]', response["response"], re.DOTALL)
+    '''json_match = re.search(r'\[\s*{.*}\s*\]', response["response"], re.DOTALL)
     if json_match:
         json_string = json_match.group(0)  # Extract matched JSON substring
         try:
@@ -51,7 +108,7 @@ def generate_questions_from_transcript(filename, model='llama3.2'):
                 output.write(f"{question['question']},{question['options'][0]},{question['options'][1]},{question['options'][2]},{question['options'][3]},{question['correct_answer']}\n")
         except Exception as e:
             print("Error writing to CSV:", e)
-    return response
+    return response'''
     
 # Example usage
 questions = generate_questions_from_transcript("subtitle.txt")
