@@ -29,3 +29,50 @@ transcript,question,option_1,option_2,option_3,option_4,correct_answer
 "The Great Pyramid of Giza is located in Egypt.","Where is the Great Pyramid of Giza located?","Mexico","Egypt","China","India",1
 "The formula for water is H2O.","What is the chemical formula for water?","CO2","H2O","NaCl","O2",1
 "The longest river in the world is the Nile.","What is the longest river in the world?","Amazon","Yangtze","Nile","Mississippi",2
+transcript,question,option_1,option_2,option_3,option_4,correct_answer
+"The capital of France is Paris.","What is the capital of France?","Berlin","Madrid","Paris","Rome",2
+"Mount Everest is the highest mountain in the world.","Which is the highest mountain in the world?","K2","Kangchenjunga","Mount Everest","Makalu",3
+"The Sun is the center of our solar system.","What is the center of our solar system?","Earth","Moon","Sun","Mars",3
+"Milk is a source of calcium.","What is milk a good source of?","Iron","Calcium","Vitamin C","Potassium",2
+"The currency of Japan is the Yen.","What is the currency of Japan?","Dollar","Pound","Euro","Yen",4
+"The Earth has one moon.","How many moons does Earth have?","1","2","3","4",1
+"Albert Einstein developed the theory of relativity.","Who developed the theory of relativity?","Isaac Newton","Albert Einstein","Galileo Galilei","Nikola Tesla",2
+"Australia is known as the Land Down Under.","Which country is known as the Land Down Under?","Canada","South Africa","Australia","New Zealand",3
+"The Great Wall of China is visible from space.","What is the only man-made structure visible from space?","Eiffel Tower","Pyramids of Giza","Great Wall of China","Statue of Liberty",3
+"Oxygen is essential for human survival.","Which gas is essential for human survival?","Carbon dioxide","Nitrogen","Oxygen","Hydrogen",3
+"The national animal of India is the tiger.","What is the national animal of India?","Lion","Elephant","Peacock","Tiger",4
+"The Sahara Desert is the largest hot desert in the world.","What is the largest hot desert in the world?","Gobi Desert","Sahara Desert","Kalahari Desert","Mojave Desert",2
+"The Taj Mahal is located in India.","Where is the Taj Mahal located?","Pakistan","Bangladesh","India","Nepal",3
+"The Pacific Ocean is the largest ocean in the world.","Which is the largest ocean in the world?","Atlantic Ocean","Indian Ocean","Pacific Ocean","Arctic Ocean",3
+"The human heart has four chambers.","How many chambers does the human heart have?","2","3","4","5",3
+"Photosynthesis occurs in plant leaves.","Where does photosynthesis occur in plants?","Roots","Stem","Leaves","Flowers",3
+"The Eiffel Tower is in Paris.","Where is the Eiffel Tower located?","London","New York","Berlin","Paris",4
+"The cheetah is the fastest land animal.","Which is the fastest land animal?","Lion","Cheetah","Leopard","Tiger",2
+"The largest planet in our solar system is Jupiter.","Which is the largest planet in our solar system?","Saturn","Earth","Jupiter","Neptune",3
+"Rupee is the currency of India.","What is the currency of India?","Dollar","Rupee","Pound","Yen",2
+"The Mona Lisa was painted by Leonardo da Vinci.","Who painted the Mona Lisa?","Pablo Picasso","Leonardo da Vinci","Vincent van Gogh","Claude Monet",2
+"The Amazon is the largest river by discharge.","Which is the largest river by discharge?","Nile","Ganga","Amazon","Yangtze",3
+"The primary colors are red, blue, and yellow.","Which of the following is a primary color?","Green","Purple","Red","Orange",3
+"A day has 24 hours.","How many hours are in a day?","12","24","36","48",2
+"The first President of the United States was George Washington.","Who was the first President of the United States?","Abraham Lincoln","George Washington","Thomas Jefferson","John Adams",2
+"The capital of Italy is Rome.","What is the capital of Italy?","Venice","Florence","Milan","Rome",4
+"A triangle has three sides.","How many sides does a triangle have?","2","3","4","5",2
+"The Moon orbits the Earth.","What does the Moon orbit?","Sun","Mars","Earth","Jupiter",3
+"Newton discovered the law of gravity.","Who discovered the law of gravity?","Albert Einstein","Isaac Newton","Galileo Galilei","Charles Darwin",2
+"China is the most populous country in the world.","Which country has the largest population?","India","USA","China","Russia",3
+"The piano is a stringed instrument.","What type of instrument is a piano?","Percussion","String","Wind","Brass",2
+"Venus is the hottest planet in the solar system.","Which is the hottest planet in the solar system?","Mars","Mercury","Venus","Jupiter",3
+"The national flag of the USA has 50 stars.","How many stars are there on the USA's national flag?","48","50","52","54",2
+"An octopus has three hearts.","How many hearts does an octopus have?","1","2","3","4",3
+"A leap year occurs every four years.","How often does a leap year occur?","2 years","3 years","4 years","5 years",3
+"Shakespeare wrote 'Romeo and Juliet'.","Who wrote 'Romeo and Juliet'?","Charles Dickens","Mark Twain","William Shakespeare","Jane Austen",3
+"The Indian Ocean is located to the south of India.","Which ocean lies to the south of India?","Atlantic Ocean","Arctic Ocean","Pacific Ocean","Indian Ocean",4
+"Penguins are flightless birds.","Which bird cannot fly?","Eagle","Penguin","Parrot","Owl",2
+"Mercury is the smallest planet in the solar system.","Which is the smallest planet in the solar system?","Mars","Mercury","Pluto","Venus",2
+"The capital of Germany is Berlin.","What is the capital of Germany?","Berlin","Munich","Frankfurt","Hamburg",1
+"Bananas are rich in potassium.","Which fruit is rich in potassium?","Apple","Banana","Orange","Grapes",2
+"A hexagon has six sides.","How many sides does a hexagon have?","5","6","7","8",2
+"The Golden Gate Bridge is in San Francisco.","Where is the Golden Gate Bridge located?","Los Angeles","New York","Chicago","San Francisco",4
+"The Sahara is located in Africa.","Where is the Sahara Desert located?","Asia","Africa","South America","Australia",2
+"A thermometer is used to measure temperature.","What does a thermometer measure?","Pressure","Temperature","Speed","Weight",2
+"The national flower of India is the lotus.","What is the national flower of India?","Rose","Lily","Lotus","Tulip",3

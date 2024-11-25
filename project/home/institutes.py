@@ -69,20 +69,6 @@ class InstitutesView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request):
-        """
-        Deletes an existing institution. Restricted to superadmin users.
-        """
-        if not self.is_superadmin(request.user):
-            return Response({'error': 'You do not have permission to perform this action.'}, status=status.HTTP_403_FORBIDDEN)
-
-        institutes = Institution.objects.filter(name__icontains=request.data.get('name'))
-        if not institutes.exists():
-            return Response({'error': 'Institution not found'}, status=status.HTTP_404_NOT_FOUND)
-
-        institutes.delete()
-        return Response({'success': 'Institution deleted'}, status=status.HTTP_204_NO_CONTENT)
-
     @staticmethod
     def is_superadmin(user):
         """

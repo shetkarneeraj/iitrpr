@@ -20,7 +20,7 @@ urlpatterns = [
     path('questions/', questions),
     path('articles/', articles),
 
-    path('programs/', programsRoute),
+    path('programs/', ProgramsView.as_view()),
     path('programgroups/', programGroupMap),
     path('groups/', groupsRoute),
 

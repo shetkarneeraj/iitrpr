@@ -1,115 +1,108 @@
 import ollama
 import re
 import json
-import pandas as pd
-import openai
-
-function_schema = {
-    "name": "format_questions",
-    "description": "Formats and validates MCQ responses into the desired JSON structure.",
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "questions": {
-                "type": "array",
-                "description": "List of questions with options and correct answers",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "question": {"type": "string"},
-                        "options": {
-                            "type": "array",
-                            "items": {"type": "string"},
-                            "minItems": 1,  # At least one option required
-                        },
-                        "correct_answer": {"type": "integer", "minimum": 0},
-                    },
-                    "required": ["question", "options", "correct_answer"],
-                },
-            },
-        },
-        "required": ["questions"],
-    },
-}
 
 def generate_questions_from_transcript(filename, model='llama3.2'):
     task_description = """
         You are an AI tasked with generating multiple-choice questions (MCQs) from a given transcript. 
         Your goal is to:
         1. Identify important concepts, events, or details in the transcript.
-        2. Frame a question in a simple and clear manner based on these concepts.
+        2. Frame questions in a simple and clear manner based on these concepts.
         3. Provide 4 answer options for each question, ensuring one is correct and the others are plausible but incorrect.
-        4. Specify the index (0-based) of the correct answer.
+        4. Specify the index (0-based) of the correct answer for each question.
         5. Format your response as a JSON list where each entry follows the structure:
         { "question": "<question_text>", "options": ["<option1>", "<option2>", "<option3>", "<option4>"], "correct_answer": <index_of_correct_option> }
 
-        Here is an example:
+        Example output:
+        [
             {
                 "question": "What is the capital of France?",
                 "options": ["Berlin", "Madrid", "Paris", "Rome"],
                 "correct_answer": 2
+            },
+            {
+                "question": "Which planet is known as the Red Planet?",
+                "options": ["Earth", "Mars", "Jupiter", "Venus"],
+                "correct_answer": 1
+            },
+            {
+                "question": "What is the chemical symbol for water?",
+                "options": ["H2O", "O2", "CO2", "NaCl"],
+                "correct_answer": 0
             }
-        Your input will be a transcript, and you will generate questions based on its content in this exact format.
-        """
+        ]
+        Your input will be a transcript, and you will generate 3 questions based on its content in this exact format.
+    """
 
-    # Read the transcript from the file
     with open(filename, 'r') as file:
         transcript = file.read()
-    
-    # Combine task description and transcript into the prompt
-    prompt = task_description +'\n Here is the transcript content: \n' + transcript + 'Generate 5 questions in the said json format, { "question": "<question_text>", "options": ["<option1>", "<option2>", "<option3>", "<option4>"], "correct_answer": <index_of_correct_option> } , based on this transcript.'
 
-    # Call Ollama's chat API to generate a response
+    prompt = task_description + '\n Here is the transcript content: \n' + transcript + 'Generate 3 questions as a JSON list, each question following the specified json format { "question": "<question_text>", "options": ["<option1>", "<option2>", "<option3>", "<option4>"], "correct_answer": <index_of_correct_option> }.'
+
+
     response = ollama.generate(model=model, prompt=prompt)
-    llama_output = response["response"]
-
-    function_call_response = openai.chat.completions.create(
-        model="gpt-4-0613",
-        messages=[
-            {
-                "role": "system",
-                "content": "You are an AI assistant skilled at cleaning and structuring JSON data.",
-            },
-            {
-                "role": "user",
-                "content": f"Validate and format this response into a JSON list: {llama_output}",
-            },
-        ],
-        functions=[function_schema],
-        function_call={"name": "format_questions"},
-    )
-
-    # Extract the structured questions
-    structured_output = function_call_response["choices"][0]["message"]["function_call"]["arguments"]
-    questions = json.loads(structured_output)
-    print("Formatted Questions:", questions)
-    # Save questions to a CSV file
-    with open("output.csv", "a") as output:
-        for question in questions["questions"]:
-            output.write(f"{question['question']},{','.join(question['options'])},{question['correct_answer']}\n")
-    return questions["questions"]
+    print(response)
 
     # Extract JSON from the response using regex
-    '''json_match = re.search(r'\[\s*{.*}\s*\]', response["response"], re.DOTALL)
+    # After extracting and correcting the JSON
+    json_match = re.search(r'\[\s*(\{\s*"question":\s*".+?",\s*"options":\s*\[\s*".+?"(?:,\s*".+?")*\s*\],\s*"correct_answer":\s*\d+\s*\}\s*,?\s*)+\]', response["response"], re.DOTALL)
     if json_match:
         json_string = json_match.group(0)  # Extract matched JSON substring
-        try:
-            questions_list = json.loads(json_string)
-            print(questions_list)
-        except json.JSONDecodeError as e:
-            print("Error parsing JSON:", e)
+        corrected_json = correct_json_format(json_string, model=model)
+        parsed_json = json.loads(corrected_json)
+
+    # Check if parsed_json is a list or a single dictionary
+        if isinstance(parsed_json, dict):  # If it's a single dictionary, wrap it in a list
+            questions_list = [parsed_json]
+        elif isinstance(parsed_json, list):  # Already a list of dictionaries
+            questions_list = parsed_json
+        else:
+            print("Unexpected JSON structure:", parsed_json)
             return None
     else:
         print("No valid JSON found in the response.")
         return None
+
+# Save questions to a CSV file
     with open("output.csv", "a") as output:
-        try:
-            for question in questions_list:
-                output.write(f"{question['question']},{question['options'][0]},{question['options'][1]},{question['options'][2]},{question['options'][3]},{question['correct_answer']}\n")
-        except Exception as e:
-            print("Error writing to CSV:", e)
-    return response'''
+    # Write a header row to the CSV for clarity
+        output.write("Question,Option 1,Option 2,Option 3,Option 4,Correct Answer\n")
     
+        for question in questions_list:
+        # Ensure all fields are correctly written in CSV format
+            output.write(
+                f"\"{question['question']}\",\"{question['options'][0]}\",\"{question['options'][1]}\","
+                f"\"{question['options'][2]}\",\"{question['options'][3]}\",{question['correct_answer']}\n"
+            )
+
+    return questions_list
+
+
+def correct_json_format(json_string, model='llama3.2'):
+    """
+    Sends the JSON string to another LLM call to correct any formatting issues.
+    """
+    correction_prompt = f"""
+        You are an AI that fixes improperly formatted JSON. Here is the input JSON:
+        {json_string}
+
+        Fix any issues such as:
+        1. Missing or extra brackets, commas, or quotes.
+        2. Incorrect data types or mismatched structures.
+        3. Ensure the JSON is valid and conforms to the following structure:
+           [
+               {{
+                   "question": "<question_text>",
+                   "options": ["<option1>", "<option2>", "<option3>", "<option4>"],
+                   "correct_answer": <index_of_correct_option>
+               }}
+           ]
+
+        Return only the corrected JSON, and nothing else.
+    """
+    response = ollama.generate(model=model, prompt=correction_prompt)
+    return response["response"]
+
 # Example usage
 questions = generate_questions_from_transcript("subtitle.txt")
 print(questions)

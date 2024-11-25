@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.google",
     "oauth2_provider",
     'corsheaders',
+    'rest_framework_simplejwt.token_blacklist',
 ]
 
 SOCIALACCOUNT_PROVIDERS = {

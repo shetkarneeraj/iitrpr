@@ -29,7 +29,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 class InstitutionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Institution
-        fields = '__all__'
+        exclude = ['created_at']
         depth = 1
 
 class UserSerializer(serializers.ModelSerializer):

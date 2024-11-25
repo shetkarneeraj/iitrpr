@@ -1,7 +1,7 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from home.serializers import ProgramSerializer, ProgramGroupMappingSerializer, GroupSerializer
-from .models import Program, ProgramGroupMapping, Group
+from .models import Program, ProgramGroupMapping, Group, Profile
 from datetime import datetime
 
 from rest_framework.views import APIView
@@ -11,12 +11,13 @@ from rest_framework.decorators import api_view
 from rest_framework import status
 from django.contrib.auth.models import User
 from rest_framework.exceptions import PermissionDenied
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 # Custom permission decorator for role-based access
 def role_required(roles):
     def decorator(func):
         def wrapper(self, request, *args, **kwargs):
-            user_role = getattr(request.user, "role", None)  # Assuming `role` is a field in the User model or profile
+            user_role = Profile.objects.get(username=request.user).user_type
             if user_role not in roles:
                 raise PermissionDenied("You do not have permission to perform this action.")
             return func(self, request, *args, **kwargs)
@@ -24,6 +25,7 @@ def role_required(roles):
     return decorator
 
 class ProgramsView(APIView):
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -49,15 +51,6 @@ class ProgramsView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    @role_required(roles=["admin", "moderator", "superadmin", "staff", "instructor"])
-    def delete(self, request):
-        """Only specific roles can delete programs."""
-        programs = Program.objects.filter(name=request.data.get('name'))
-        if not programs.exists():
-            return Response({'error': 'Program not found'}, status=status.HTTP_404_NOT_FOUND)
-        programs.delete()
-        return Response({'success': 'Program deleted'}, status=status.HTTP_204_NO_CONTENT)
 
     @role_required(roles=["admin", "moderator", "superadmin", "staff", "instructor"])
     def put(self, request):

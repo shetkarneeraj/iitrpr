@@ -23,6 +23,14 @@ class Profile(models.Model):
 
     def __str__(self):
         return self.username
+    
+class adminInstitutionAssociation(models.Model):
+    admin_id = models.ForeignKey(Profile, related_name='admin_associations', on_delete=models.CASCADE)
+    institution_id = models.ForeignKey(Institution, related_name='admin_associations', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.admin.username} - {self.institution.name}"
 
 class Course(models.Model):
     name = models.CharField(max_length=255, unique=True)

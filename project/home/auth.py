@@ -9,8 +9,9 @@ from rest_framework.exceptions import AuthenticationFailed
 from django.contrib.auth.models import AnonymousUser
 from home.models import Profile, loginTokens
 import datetime
-from rest_framework.status import HTTP_401_UNAUTHORIZED
 from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework.decorators import api_view
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 def check_auth(request, reqRole):
     jwt_authenticator = JWTAuthentication()
@@ -46,68 +47,104 @@ class UserRegistrationView(APIView):
 # User Login
 class UserLoginView(APIView):
     """
-    Handles user login and returns a single JWT access token.
+    Handles user login and provides role-based authentication.
     """
 
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [AllowAny]  # POST (login) is accessible to all, others require authentication.
+
+    def get_permissions(self):
+        """
+        Overrides permissions based on the HTTP method.
+        """
+        if self.request.method == 'POST':
+            return [AllowAny()]  # Allow anyone to access POST (login).
+        return [IsAuthenticated()]  # Require authentication for other methods.
+
+    # Get user list
+    def get(self, request):
+        """
+        Returns the role of the authenticated user.
+        """
+        user = request.user
+        if user.is_anonymous:
+            return Response({"error": "User not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        user_profile = Profile.objects.get(username=user)
+
+        try:
+            required_roles = ['superadmin', 'admin', 'moderators']
+            user_profiles = Profile.objects.filter(user_type__in=required_roles)  # Use filter() for multiple objects
+
+            user_profiles_list = []
+            for person in user_profiles:
+                serialized_person = profileSerializer(person).data  # Serialize each profile
+                user_profiles_list.append(serialized_person)
+
+            return Response({"users": user_profiles_list}, status=status.HTTP_200_OK)
+
+        except Profile.DoesNotExist:
+            return Response({"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    # Login
     def post(self, request):
-        # Extract username and password from request data
+        """
+        Handles user login and returns a JWT access token.
+        """
         username = request.data.get('username')
         password = request.data.get('password')
 
-        # Authenticate the user
-        user = authenticate(username=username, password=password)
-
-        if user:
-            # Generate a JWT access token
-            access_token = str(AccessToken.for_user(user))
-
-            return Response({
-                "access_token": access_token,
-                "expires_in": 5 * 60 * 60,  # Expiration time in seconds (5 hours)
-            }, status=200)
-
-        return Response({"error": "Invalid credentials"}, status=HTTP_401_UNAUTHORIZED)
-    """
-    Handles user login and returns JWT tokens along with user role and client IP.
-    """
-
-    def post(self, request):
-        # Extract username and password from request data
-        username = request.data.get('username')
-        password = request.data.get('password')
-
-        # Get the client's IP address
+        # Get client IP address
         ip_address = self.get_client_ip(request)
-        print(f"Login attempt from IP: {ip_address}")  # Log the IP address for debugging
 
-        # Authenticate the user
+        # Authenticate user
         user = authenticate(username=username, password=password)
-        print(user)
-
         if user:
             try:
-                # Fetch user profile for additional information
+                # Fetch profile for role-based data
                 profile = Profile.objects.get(username=user)
             except Profile.DoesNotExist:
                 return Response({"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)
 
+            if profile.login == True:
+                return Response({"error": "User already logged in"}, status=status.HTTP_400_BAD_REQUEST)
+            
             # Generate JWT tokens
             refresh = RefreshToken.for_user(user)
-
-            authorization_header = (f"Bearer {str(refresh.access_token)}")
-            print(authorization_header)
+            profile.last_ip = ip_address
+            profile.login = True
+            profile.save()
 
             return Response({
                 "access": str(refresh.access_token),
-                "role": profile.user_type,  # Replace with your Profile field for user role
+                "role": profile.user_type,
             }, status=status.HTTP_200_OK)
 
         return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
+    # Logout
+    def delete(self, request):
+        """
+        Logs out the user by blacklisting the refresh token.
+        """
+        try:
+            # Fetch user profile
+            user = request.user
+            profile = Profile.objects.get(username=user)
+            profile.login = False
+            profile.last_ip = None
+            profile.save()
+            # Blacklist access token
+            refresh_token = request.headers.get('Authorization').split(' ')[1]
+            AccessToken(refresh_token).blacklist()
+            return Response({"message": "User logged out successfully."}, status=status.HTTP_205_RESET_CONTENT)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
     @staticmethod
     def get_client_ip(request):
         """
-        Fetch the client IP address from the request headers or META data.
+        Fetches the client IP address.
         """
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
         if x_forwarded_for:
