@@ -11,6 +11,7 @@ from home.models import Profile, loginTokens
 import datetime
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.decorators import api_view
+from django.db import transaction
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
 def check_auth(request, reqRole):
@@ -125,22 +126,76 @@ class UserLoginView(APIView):
     # Logout
     def delete(self, request):
         """
-        Logs out the user by blacklisting the refresh token.
+        Logs out the user by blacklisting the refresh token and updating the profile.
+        
+        Returns:
+            Response: JSON response indicating success or failure of logout operation
         """
         try:
-            # Fetch user profile
-            user = request.user
-            profile = Profile.objects.get(username=user)
-            profile.login = False
-            profile.last_ip = None
-            profile.save()
-            # Blacklist access token
-            refresh_token = request.headers.get('Authorization').split(' ')[1]
-            AccessToken(refresh_token).blacklist()
-            return Response({"message": "User logged out successfully."}, status=status.HTTP_205_RESET_CONTENT)
+            with transaction.atomic():
+                # Get the user and their profile
+                user = request.user
+                if not user.is_authenticated:
+                    return Response(
+                        {"error": "User not authenticated"}, 
+                        status=status.HTTP_401_UNAUTHORIZED
+                    )
+
+                # Extract token from Authorization header
+                auth_header = request.headers.get('Authorization')
+                if not auth_header or not auth_header.startswith('Bearer '):
+                    return Response(
+                        {"error": "Invalid token format"}, 
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+                # Get and validate refresh token
+                refresh_token = auth_header.split(' ')[1]
+                try:
+                    token = AccessToken(refresh_token)
+                except:
+                    return Response(
+                        {"error": f"Invalid token"}, 
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+                # Update profile
+                try:
+                    profile = Profile.objects.get(username=user)
+                    profile.login = False
+                    profile.last_ip = None
+                    profile.save(update_fields=['login', 'last_ip'])
+                except:
+                    return Response(
+                        {"error": "User profile not found"}, 
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+
+                # Blacklist the token
+                token.blacklist()
+
+                # Optional: Clear any session data if using session authentication
+                if hasattr(request, 'session'):
+                    request.session.flush()
+
+                return Response(
+                    {
+                        "message": "User logged out successfully",
+                        "user": user.username,
+                        "timestamp": datetime.datetime.now()
+                    }, 
+                    status=status.HTTP_200_OK
+                )
+
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        
+            return Response(
+                {
+                    "error": "Logout failed",
+                    "detail": str(e)
+                }, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
     @staticmethod
     def get_client_ip(request):
         """
