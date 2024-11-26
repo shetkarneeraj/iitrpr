@@ -174,7 +174,19 @@ LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(hours=5),
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=7),
     "AUTH_HEADER_TYPES": ("Bearer",),
     "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
 }
+
+# Email configuration for MailHog
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "127.0.0.1"  # MailHog host
+EMAIL_PORT = 1025         # Default SMTP port for MailHog
+EMAIL_USE_TLS = False     # No TLS required for MailHog
+EMAIL_USE_SSL = False     # No SSL required for MailHog
+DEFAULT_FROM_EMAIL = "no-reply@example.com"
+
+# Frontend URL
+FRONTEND_URL = "http://127.0.0.1:3000"  # Replace with your frontend's local URL
+SITE_NAME = "Your Local Website"

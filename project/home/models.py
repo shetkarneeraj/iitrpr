@@ -1,5 +1,6 @@
 from django.db import models
-
+import uuid
+from datetime import datetime, timedelta
 
 class Institution(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -153,6 +154,26 @@ class Violation(models.Model):
 
     def __str__(self):
         return f"{self.session.user.username} - {self.type}"
+    
+
+
+class PasswordResetToken(models.Model):
+    user = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="password_reset_tokens")
+    token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+
+    def save(self, *args, **kwargs):
+        if not self.expires_at:
+            self.expires_at = datetime.now() + timedelta(hours=24)  # Token expires in 24 hours
+        super().save(*args, **kwargs)
+
+    def is_expired(self):
+        return datetime.now() > self.expires_at
+
+    def __str__(self):
+        return f"Password Reset Token for {self.user.email} (Expires: {self.expires_at})"
+    
 
 class Log(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)

@@ -7,12 +7,18 @@ from .serializers import UserRegistrationSerializer, profileSerializer
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 from django.contrib.auth.models import AnonymousUser
-from home.models import Profile, loginTokens
-import datetime
+from home.models import Profile, PasswordResetToken
+from datetime import datetime, timedelta
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.decorators import api_view
 from django.db import transaction
 from rest_framework.permissions import IsAuthenticated, AllowAny
+
+from django.core.mail import send_mail
+from django.conf import settings
+import uuid
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 
 def check_auth(request, reqRole):
     jwt_authenticator = JWTAuthentication()
@@ -45,6 +51,42 @@ class UserRegistrationView(APIView):
         return Response(userregistrationserializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class resetPasswordView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [AllowAny]
+
+    def post(self, request, key):
+        new_password = request.POST.get('password')
+        user_id = PasswordResetToken.objects.get(token=key).user_id
+        user_name = Profile.objects.get(id=user_id).username
+        # Update password in django user table
+
+        # Your implementation for password reset goes here
+        return Response({'message': 'Password reset successful'}, status=status.HTTP_200_OK)
+
+
+class check_login(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        user_role = Profile.objects.get(username=user).user_type
+        return Response({"message": "User is logged in", "role": user_role}, status=status.HTTP_200_OK)
+
+
+class resetPasswordView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+    def post(self, request, key):
+        new_password = request.POST.get('password')
+        user_id = PasswordResetToken.objects.get(token=key).user_id
+        user_name = Profile.objects.get(id=user_id).username
+        # Update password in django user table
+
+        # Your implementation for password reset goes here
+        return Response({'message': 'Password reset successful'}, status=status.HTTP_200_OK)
+    
 # User Login
 class UserLoginView(APIView):
     """
@@ -117,12 +159,41 @@ class UserLoginView(APIView):
             profile.save()
 
             return Response({
-                "access": str(refresh.access_token),
+                "token": str(refresh.access_token),
                 "role": profile.user_type,
             }, status=status.HTTP_200_OK)
 
         return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
+    # Forgot password
+    def put(self, request):
+        """
+        Sends a password reset email to the user.
+        """
+
+        try:
+            user = Profile.objects.get(username=request.user)
+        except Profile.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Generate a unique string uuid
+        token = str(uuid.uuid4())
+        expiration_time = datetime.now() + timedelta(hours=1)  # Token valid for 24 hours
+
+        # Save the token to the PasswordResetToken model
+        reset_token, created = PasswordResetToken.objects.update_or_create(
+            user=user,
+            defaults={
+                "token": token,
+                "expires_at": expiration_time,
+            },
+        )
+
+        # Send password reset email
+        self.send_password_reset_email(user, reset_token.token)
+
+        return Response({"message": "Password reset email sent"}, status=status.HTTP_200_OK)
+    
     # Logout
     def delete(self, request):
         """
@@ -135,11 +206,8 @@ class UserLoginView(APIView):
             with transaction.atomic():
                 # Get the user and their profile
                 user = request.user
-                if not user.is_authenticated:
-                    return Response(
-                        {"error": "User not authenticated"}, 
-                        status=status.HTTP_401_UNAUTHORIZED
-                    )
+                if user.is_anonymous:
+                    return Response({"error": "User not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
 
                 # Extract token from Authorization header
                 auth_header = request.headers.get('Authorization')
@@ -182,7 +250,7 @@ class UserLoginView(APIView):
                     {
                         "message": "User logged out successfully",
                         "user": user.username,
-                        "timestamp": datetime.datetime.now()
+                        "timestamp": datetime.now()
                     }, 
                     status=status.HTTP_200_OK
                 )
@@ -195,7 +263,29 @@ class UserLoginView(APIView):
                 }, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-    
+
+
+    def send_password_reset_email(self, user, token):
+        """
+        Sends a password reset email to the user with an HTML template.
+        """
+        reset_url = f"http://127.0.0.1:3000/reset-password/{token}"  # Example frontend URL
+        subject = "Password Reset Request"
+        
+        # Render the HTML template
+        html_message = render_to_string("emails/password_reset.html", {"user": user, "reset_url": reset_url})
+        plain_message = strip_tags(html_message)  # Fallback plain text version
+        
+        send_mail(
+            subject=subject,
+            message=plain_message,
+            from_email="no-reply@vicharanshaala.com",
+            recipient_list=[user.email],
+            html_message=html_message,  # Attach the HTML message
+            fail_silently=False,
+        )
+
+
     @staticmethod
     def get_client_ip(request):
         """

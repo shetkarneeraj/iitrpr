@@ -27,7 +27,3 @@ class CoursesView(APIView):
         ]
 
         return Response({"courses": courses}, status=200)
-
-@api_view(['GET', 'POST'])
-def logout_view(request):
-    return Response({'message': 'Logged out successfully.'})

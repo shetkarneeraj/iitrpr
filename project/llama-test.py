@@ -37,31 +37,34 @@ def generate_questions_from_transcript(filename, model='llama3.2'):
     with open(filename, 'r') as file:
         transcript = file.read()
 
-    prompt = task_description + '\n Here is the transcript content: \n' + transcript + 'Generate 3 questions as a JSON list, each question following the specified json format { "question": "<question_text>", "options": ["<option1>", "<option2>", "<option3>", "<option4>"], "correct_answer": <index_of_correct_option> }.'
+    segments = re.split(r'---Segment \d+ Transcript:\n', transcript)[1:]  # Skip first empty match
+    segment_questions = {}
 
 
-    response = ollama.generate(model=model, prompt=prompt)
-    print(response)
+    for i, segment in enumerate(segments, start=1):
+        prompt = task_description + '\n Here is the transcript content: \n' + segment + 'Generate 3 questions as a JSON list, each question following the specified json format { "question": "<question_text>", "options": ["<option1>", "<option2>", "<option3>", "<option4>"], "correct_answer": <index_of_correct_option> }.'
+        response = ollama.generate(model=model, prompt=prompt)
+        print(response)
 
     # Extract JSON from the response using regex
     # After extracting and correcting the JSON
-    json_match = re.search(r'\[\s*(\{\s*"question":\s*".+?",\s*"options":\s*\[\s*".+?"(?:,\s*".+?")*\s*\],\s*"correct_answer":\s*\d+\s*\}\s*,?\s*)+\]', response["response"], re.DOTALL)
-    if json_match:
-        json_string = json_match.group(0)  # Extract matched JSON substring
-        corrected_json = correct_json_format(json_string, model=model)
-        parsed_json = json.loads(corrected_json)
+        json_match = re.search(r'\[\s*(\{\s*"question":\s*".+?",\s*"options":\s*\[\s*".+?"(?:,\s*".+?")*\s*\],\s*"correct_answer":\s*\d+\s*\}\s*,?\s*)+\]', response["response"], re.DOTALL)
+        if json_match:
+            json_string = json_match.group(0)  # Extract matched JSON substring
+            corrected_json = correct_json_format(json_string, model=model)
+            parsed_json = json.loads(corrected_json)
 
-    # Check if parsed_json is a list or a single dictionary
-        if isinstance(parsed_json, dict):  # If it's a single dictionary, wrap it in a list
-            questions_list = [parsed_json]
-        elif isinstance(parsed_json, list):  # Already a list of dictionaries
-            questions_list = parsed_json
+        # Check if parsed_json is a list or a single dictionary
+            if isinstance(parsed_json, dict):  # If it's a single dictionary, wrap it in a list
+                questions_list = [parsed_json]
+            elif isinstance(parsed_json, list):  # Already a list of dictionaries
+                questions_list = parsed_json
+            else:
+                print(f"Unexpected JSON structure for segment {i}: {parsed_json}")
+                questions_list = []
         else:
-            print("Unexpected JSON structure:", parsed_json)
+            print("No valid JSON found in the response.")
             return None
-    else:
-        print("No valid JSON found in the response.")
-        return None
 
 # Save questions to a CSV file
     with open("output.csv", "a") as output:
