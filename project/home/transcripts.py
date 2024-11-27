@@ -11,9 +11,8 @@ import whisper
 import os
 import uuid
 
-
 # Utility function to generate a transcript
-def generate_transcript_from_url(url):
+def generate_transcript_from_url(url, timestamps):
     unique_id = str(uuid.uuid4())[:8]  # Shorten UUID for brevity
     m4a_file = f"{unique_id}"
     wav_file = f"{unique_id}.wav"
@@ -31,20 +30,39 @@ def generate_transcript_from_url(url):
         print(f"Conversion complete: {wav_file}")
 
         # Step 3: Transcribe audio using Whisper
-        model = whisper.load_model("base")
-        print("Generating transcript...")
-        result = model.transcribe(wav_file)
-        transcript = result["text"]
+        transcripts = []
+        for i in range(len(timestamps)):
+            start_time = timestamps[i]
+            end_time = timestamps[i + 1] if i + 1 < len(timestamps) else len(audio)
+            segment = audio[start_time:end_time]
+
+            # Save the segment to a temporary file
+            segment_file = f"{unique_id}_segment_{i}.wav"
+            segment.export(segment_file, format="wav")
+            print(f"Segment {i + 1} saved: {segment_file}")
+
+            # Step 4: Transcribe the segment using Whisper model
+            model = whisper.load_model("base")
+            result = model.transcribe(segment_file)
+            transcripts.append(f"Segment {i + 1} Transcript:\n{result['text']}\n")
+
+            # Delete the segment file
+            os.remove(segment_file)
 
         # Step 4: Clean up temporary files
         os.remove(f"{m4a_file}.m4a")
         os.remove(wav_file)
         print(f"Temporary files deleted: {m4a_file}.m4a, {wav_file}")
 
-        return transcript
+        full_transcript = "\n".join(transcripts)
+        print("Full Transcript:")
+        print(full_transcript)
+
+        return full_transcript
+
     except Exception as e:
-        print(f"Error during transcription: {e}")
-        return None
+        print(f"An error occurred: {e}")
+        return ""
 
 # API view for video operations
 @api_view(['GET', 'POST', 'PUT', 'DELETE'])
@@ -88,7 +106,7 @@ def videos(request):
             return Response({'error': 'Video ID is required for update'})
         
         try:
-            video = Video.objects.get(pk=video_id)
+            video = Video.objects.get(id=video_id)
         except Video.DoesNotExist:
             return Response({'error': 'Video not found'})
 
@@ -111,7 +129,7 @@ def videos(request):
             return Response({'error': 'Video ID is required for deletion'})
         
         try:
-            video = Video.objects.get(pk=video_id)
+            video = Video.objects.get(id=video_id)
             video.delete()
             return Response({'success': 'Video deleted'})
         except Video.DoesNotExist:

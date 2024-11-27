@@ -28,8 +28,7 @@ def generate_descriptive_from_transcript(filename, model='llama3.2'):
 
     prompt = task_description + '\n Here is the transcript content: \n' + transcript + 'Generate 3 questions as a JSON list, each question following the specified json format { "question": "<question_text>", "options": ["<option1>", "<option2>", "<option3>", "<option4>"], "correct_answer": <index_of_correct_option> }.'
 
-
-    response = ollama.generate(model=model, prompt=prompt)
+    response = ollama.generate(model=model, prompt=prompt, format="json")
     
     # Regular expression to extract the JSON content
     json_pattern = re.compile(r'\[.*?\]', re.DOTALL)
